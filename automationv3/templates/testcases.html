@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}Test Cases{% end %}
+
+{% block navbuttons %}
+<a href="/testcases/new"
+    class="mx-auto bg-blue-700 hover:bg-blue-600 group flex items-center focus:shadow-outline focus:outline-none px-2 py-2 text-white text-base font-medium rounded-md">
+    <svg class="mr-1 h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    Test Case
+</a>
+{% end %}
+
+{% block content %}
+<ul>
+    {% for tc in test_cases %}
+    <li><a href="/testcase/{{'{:016X}'.format(tc.id)}}">{{ '0x{:016X}'.format(tc.id) }}</a></li>
+    {% end %}
+</ul>
+{% end %}

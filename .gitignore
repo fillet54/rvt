@@ -1,0 +1,6 @@
+test-cases
+*.egg-info
+node_modules/
+package-lock.json
+tailwind.config.js
+__pycache__/

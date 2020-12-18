@@ -1,0 +1,52 @@
+<html>
+
+<head>
+    <title>{% block title %}Default title{% end %}</title>
+    <link rel="stylesheet" href="{{ static_url('css/tailwind.css') }}" type="text/css">
+</head>
+
+<body>
+
+    <div class="h-screen w-screen flex justify-center content-center">
+        <div>
+            <div class="flex justify-center content-center">
+                <!-- Heroicon name: exclamation-circle -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" fill="currentColor"
+                    class="h-80 w-80 text-gray-400">
+                    <g transform="translate(20, 20)">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"></path>
+                    </g>
+                    <circle cx="30" cy="30" r="10" stroke-width=".25" stroke="currentColor" fill="none"
+                        stroke-dasharray="1">
+                    </circle>
+                    <circle cx="30" cy="30" r="13" stroke-width=".25" stroke="currentColor" fill="none"
+                        stroke-dasharray="1" stroke-opacity=".5"></circle>
+                    <circle cx="30" cy="30" r="17" stroke-width=".25" stroke="currentColor" fill="none"
+                        stroke-dasharray="1" stroke-opacity=".25"></circle>
+                    <circle cx="30" cy="30" r="23" stroke-width=".25" stroke="currentColor" fill="none"
+                        stroke-dasharray="1" stroke-opacity=".1"></circle>
+                    <circle cx="30" cy="30" r="30" stroke-width=".25" stroke="currentColor" fill="none"
+                        stroke-dasharray="1" stroke-opacity=".05"></circle>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-700">Opps!! Something Went Wrong</h1>
+            <p>
+                It's likely this page does not exist yet. This application is still in development.
+            </p>
+            <a href="/"
+                class="w-40 bg-gray-300 text-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                <!-- Heroicon name: arrow-left -->
+                <svg class="mr-3 h-6 w-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Go Back Home
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

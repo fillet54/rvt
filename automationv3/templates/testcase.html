@@ -1,0 +1,453 @@
+{% extends "layout.html" %}
+
+{% block title %}Test Cases{% end %}
+
+{% block navbuttons %}
+<button
+    type="submit"
+    form="testcase-form"
+    class="mx-auto bg-blue-700 hover:bg-blue-600 group flex items-center focus:shadow-outline focus:outline-none px-2 py-2 text-white text-base font-medium rounded-md">
+    <svg class="mr-1 h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+    </svg>
+    Save
+</button>
+{% end %}
+
+{% block content %}
+
+<form id="testcase-form" method="POST">
+    <div>
+        <div class="md:grid md:grid-cols-6 md:gap-6">
+            <div class="md:col-span-1">
+                <div class="px-4 sm:px-0">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Preconditions</h3>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Setup blocks should come first
+                    </p>
+                </div>
+            </div>
+            <div class="mt-5 md:mt-0 md:col-span-5">
+                <div class="shadow sm:rounded-md sm:overflow-hidden">
+                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                        {% for stepnum, step in enumerate(testcase.preconditions) %}
+                        <div class="flex -ml-5">
+                            <div class="flex flex-col justify-between">
+                                <!-- Up -->
+                                <a title="Move Step Up">
+                                    <svg class="mt-2 mr-1 h-3 w-3 text-gray-300 hover:text-gray-600"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7" />
+                                    </svg>
+                                </a>
+                                <!-- Down -->
+                                <a title="Move Step Down">
+                                    <svg class="mt-2 mr-1 h-3 w-3 text-gray-300 hover:text-gray-600"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </a>
+                            </div>
+                            <div class="mt-1 flex-grow">
+                                <textarea id="precondition-{{stepnum}}" name="precondition_{{stepnum}}"
+                                    rows="{{len(step.split('\n'))}}"
+                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                            </div>
+                        </div>
+                        {% end %}
+                        <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                            <button
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Add Precondition
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hidden sm:block" aria-hidden="true">
+        <div class="py-5">
+            <div class="border-t border-gray-200"></div>
+        </div>
+    </div>
+
+    <div class="mt-10 sm:mt-0" x-data="{dragging: null, dropping: null}">
+        <div class="md:grid md:grid-cols-6 md:gap-6">
+            <div class="md:col-span-1">
+                <div class="px-4 sm:px-0">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Test Steps</h3>
+                    <p class="mt-1 text-sm text-gray-600">
+                    </p>
+                </div>
+            </div>
+            <div class="mt-5 md:mt-0 md:col-span-5">
+                <div class="shadow sm:rounded-md sm:overflow-hidden">
+                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                        <div id="step-container">
+                            {% for stepnum, step in enumerate(testcase.steps) %}
+                            <div id="step-{{stepnum}}" class="flex -ml-5">
+                                <!-- Buttons -->
+                                <div class="flex flex-col justify-between">
+                                    <!-- Up -->
+                                    <div class="relative inline-block text-left" x-data="{open: false}">
+                                        <div>
+                                            <a @click="open = true">
+                                                <svg class="mt-2 mr-1 h-3 w-3 text-gray-300 hover:text-gray-600"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M5 15l7-7 7 7" />
+                                                </svg>
+                                            </a>
+                                            <div x-show="open"  @click.away="open = false" 
+                                               class="z-50 origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                                               x-transition:enter="transition ease-out duration-100" 
+                                               x-transition:enter-start="transform opacity-0 scale-95"
+                                               x-transition:enter-end="transform opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-75"
+                                               x-transition:leave-start="transform opacity-100 scale-100"
+                                               x-transition:leave-end="transform opacity-0 scale-95" >
+                                                <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                                  <a @click="open = false" class="move-up group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                                                      <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414l5-5a1 1 0 011.414 0l5 5a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414 0zm0-6a1 1 0 010-1.414l5-5a1 1 0 011.414 0l5 5a1 1 0 01-1.414 1.414L10 5.414 5.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                                      </svg>
+                                                      Move Up
+                                                  </a>
+                                                  <a @click="open = false" class="add-above group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                                                      <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                                                      </svg>
+                                                      Add Above
+                                                  </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Delete -->
+                                    <div>
+                                        <a class="delete-row">
+                                            <svg class="mr-1 h-3 w-3 text-gray-300 hover:text-red-600" 
+                                                xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                    <!-- Down -->
+                                    <div class="relative inline-block text-left" x-data="{open: false}">
+                                        <div>
+                                            <a @click="open = true">
+                                                <svg class="mr-1 h-3 w-3 text-gray-300 hover:text-gray-600" 
+                                                    xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                        <div x-show="open" @click.away="open = false" class="z-50 origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                                               x-transition:enter="transition ease-out duration-100" 
+                                               x-transition:enter-start="transform opacity-0 scale-95"
+                                               x-transition:enter-end="transform opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-75"
+                                               x-transition:leave-start="transform opacity-100 scale-100"
+                                               x-transition:leave-end="transform opacity-0 scale-95" >
+                                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                                <a @click="open = false" class="move-down group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                                                    <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                      <path fill-rule="evenodd" d="M15.707 4.293a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 011.414-1.414L10 8.586l4.293-4.293a1 1 0 011.414 0zm0 6a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L10 14.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    Move Down
+                                                </a>
+                                                <a @click="open = false" class="add-below group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                                                    <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    Add Below
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-1 flex-grow">
+                                    <textarea name="steps"
+                                        rows="{{len(step.split('\n'))}}"
+                                        placeholder="Enter Block"
+                                        class="font-mono shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md">{{step}}</textarea>
+                                </div>
+                            </div>
+                            {% end %}
+                        </div>
+                        <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                            <button 
+                                onclick="add_testcase_step()"
+                                type="button"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Add Step
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<template id="step-row-template">
+    <div id="step-row-placeholder" class="flex -ml-5">
+        <!-- Buttons -->
+        <div class="mt-2 flex flex-col justify-between">
+            <!-- Up -->
+            <div class="relative inline-block text-left" x-data="{open: false}">
+                <div>
+                    <a @click="open = true">
+                        <svg class="mr-1 h-3 w-3 text-gray-300 hover:text-gray-600"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 15l7-7 7 7" />
+                        </svg>
+                    </a>
+                    <div x-show="open"  @click.away="open = false"
+                        class="z-50 origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                         x-transition:enter="transition ease-out duration-100" 
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95" >
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                          <a @click="open = false" class="move-up group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                              <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414l5-5a1 1 0 011.414 0l5 5a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414 0zm0-6a1 1 0 010-1.414l5-5a1 1 0 011.414 0l5 5a1 1 0 01-1.414 1.414L10 5.414 5.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                              </svg>
+                              Move Up
+                          </a>
+                          <a @click="open = false" class="add-above group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                              <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                              </svg>
+                              Add Above
+                          </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Delete -->
+            <div>
+                <a class="delete-row">
+                    <svg class="mr-1 h-3 w-3 text-gray-300 hover:text-red-600" 
+                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </a>
+            </div>
+            <!-- Down -->
+            <div class="relative inline-block text-left" x-data="{open: false}">
+                <div>
+                    <a @click="open = true">
+                        <svg class="mr-1 h-3 w-3 text-gray-300 hover:text-gray-600" 
+                            xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </a>
+                </div>
+                <div x-show="open" @click.away="open = false" 
+                     class="z-50 origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                     x-transition:enter="transition ease-out duration-100" 
+                     x-transition:enter-start="transform opacity-0 scale-95"
+                     x-transition:enter-end="transform opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="transform opacity-100 scale-100"
+                     x-transition:leave-end="transform opacity-0 scale-95" >
+                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                        <a @click="open = false" class="move-down group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                            <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M15.707 4.293a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 011.414-1.414L10 8.586l4.293-4.293a1 1 0 011.414 0zm0 6a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L10 14.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            Move Down
+                        </a>
+                        <a @click="open = false" class="add-below group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                            <svg class="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                            </svg>
+                            Add Below
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-1 flex-grow">
+            <textarea name="steps"
+                rows="1"
+                placeholder="Enter Test Step"
+                class="font-mono shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+        </div>
+    </div>
+</template>
+<script>
+    HTMLElement.prototype.onEvent = function (eventType, callBack, useCapture) {
+        this.addEventListener(eventType, callBack, useCapture);
+        if (!this.myListeners) {
+            this.myListeners = [];
+        };
+        this.myListeners.push({ eType: eventType, callBack: callBack });
+        return this;
+    };
+    HTMLElement.prototype.removeListeners = function () {
+        if (this.myListeners) {
+            for (var i = 0; i < this.myListeners.length; i++) {
+                this.removeEventListener(this.myListeners[i].eType, this.myListeners[i].callBack);
+            };
+           delete this.myListeners;
+        };
+    };
+
+    {% import json %}
+    function get_steps() {
+        var items = [];
+        {% for (stepnum, step) in enumerate(testcase.steps) %}
+        items.push(document.getElementById("step-{{stepnum}}").value)
+        {% end %}
+        return items
+    };
+
+    function get_preconditions() {
+        var items = [];
+        {% for (stepnum, step) in enumerate(testcase.preconditions) %}
+        items.push(document.getElementById("precondition-{{stepnum}}").value)
+        {% end %}
+        return items
+    };
+
+    function get_testcase() {
+        testcase = {% raw json.dumps(testcase.asdict()) %};
+        testcase.steps = get_steps();
+        testcase.preconditions = get_preconditions();
+        return testcase;
+    };
+
+    function post_testcase(data) {
+        var xhr = new XMLHttpRequest();
+        var url = "/testcase/{{'{:016X}'.format(testcase.id)}}";
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                console.log("SUCCESS")
+                // seems a little odd to do this but it works okay
+                document.open();
+                document.write(xhr.responseText);
+                document.close();
+            }
+            else if (xhr.readyState === 4 && xhr.status === 301) {
+                console.log("REDIRECT")
+            }
+        };
+        var rawjson = JSON.stringify(data);
+        xhr.send(rawjson);
+    };
+
+    function save_testcase() {
+        post_testcase(get_testcase());
+    };
+
+    function renumber_testcases() {
+        const container = document.getElementById("step-container");
+
+        for(let i=0; i < container.childElementCount; ++i) {
+            const child = container.children[i]
+            child.id = 'step-' + i;
+
+            const deletebutton = child.getElementsByClassName('delete-row')[0]
+            deletebutton.removeListeners();
+            deletebutton.onEvent('click', function(){
+                delete_step(i)
+            });
+
+            // Special cases
+
+            // First step
+            const moveup = child.getElementsByClassName('move-up')[0]
+            if (i == 0) {
+                moveup.style.display = 'none'
+            } else {
+                moveup.style.display = 'flex'
+            }
+            moveup.removeListeners()
+            moveup.onEvent('click', function() {
+                move_step_up(i);
+            })
+
+            // Last Step
+            const movedown = child.getElementsByClassName('move-down')[0]
+            if (i == (container.childElementCount-1)) {
+                movedown.style.display = 'none'
+            } else {
+                movedown.style.display = 'flex'
+            }
+            movedown.removeListeners()
+            movedown.onEvent('click', function() {
+                move_step_down(i);
+            })
+        }
+    };
+
+    function move_step(row, pos) {
+        const container = document.getElementById("step-container");
+        
+        if (row == pos) return;
+        if (pos < 0) return;
+        if (pos >= container.childElementCount) return;
+
+        const row_el = document.getElementById("step-" + row)
+        const direction = (row - pos) > 0 ? 0 : 1; // positive if moving down
+
+        console.log(row_el)
+        if (pos != container.childElementCount) {
+            const targetrow = document.getElementById("step-" + (pos+direction))
+            console.log(targetrow)
+            container.insertBefore(row_el, targetrow);
+        }
+        else {
+            container.appendChild(row_el)
+        }
+        renumber_testcases()
+    }
+
+    function move_step_up(row) {
+        move_step(row, row-1)
+    }
+    
+    function move_step_down(row) {
+        move_step(row, row+1)
+    }
+
+    function delete_step(index) {
+        const element = document.getElementById("step-"+index);
+        element.parentNode.removeChild(element);
+        renumber_testcases()
+    };
+
+    function add_testcase_step() {
+        const container = document.getElementById("step-container");
+        const template = document.getElementById("step-row-template");
+        const clone = template.content.firstElementChild.cloneNode(true);
+        container.appendChild(clone);
+        renumber_testcases()
+    };
+
+    renumber_testcases();
+
+</script>
+
+{% end %}

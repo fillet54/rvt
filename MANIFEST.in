@@ -1,0 +1,2 @@
+recursive-include automationv3/static *
+include automationv3/templates/*
