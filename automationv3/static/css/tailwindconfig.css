@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .CodeMirror {
+    @apply font-mono border-gray-300 rounded-md border h-auto text-sm;
+  }
+
+  .CodeMirror-hint {
+      @apply hover:bg-blue-300;
+  }
+
+}

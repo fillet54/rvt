@@ -93,14 +93,14 @@
                     <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
                         <div id="step-container">
                             {% for stepnum, step in enumerate(testcase.steps) %}
-                            <div id="step-{{stepnum}}" class="flex -ml-5">
+                            <div id="step-{{stepnum}}" class="flex -ml-5 mt-2">
                                 <!-- Buttons -->
                                 <div class="flex flex-col justify-between">
                                     <!-- Up -->
                                     <div class="relative inline-block text-left" x-data="{open: false}">
                                         <div>
                                             <a @click="open = true">
-                                                <svg class="mt-2 mr-1 h-3 w-3 text-gray-300 hover:text-gray-600"
+                                                <svg class="mr-1 h-3 w-3 text-gray-300 hover:text-gray-600"
                                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -177,7 +177,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mt-1 flex-grow">
+                                <div class="flex-grow">
                                     <textarea name="steps"
                                         rows="{{len(step.split('\n'))}}"
                                         placeholder="Enter Block"
@@ -201,9 +201,9 @@
     </div>
 
 <template id="step-row-template">
-    <div id="step-row-placeholder" class="flex -ml-5">
+    <div id="step-row-placeholder" class="flex -ml-5 mt-2">
         <!-- Buttons -->
-        <div class="mt-2 flex flex-col justify-between">
+        <div class="flex flex-col justify-between">
             <!-- Up -->
             <div class="relative inline-block text-left" x-data="{open: false}">
                 <div>
@@ -286,7 +286,7 @@
                 </div>
             </div>
         </div>
-        <div class="mt-1 flex-grow">
+        <div class="flex-grow">
             <textarea name="steps"
                 rows="1"
                 placeholder="Enter Test Step"
@@ -294,6 +294,59 @@
         </div>
     </div>
 </template>
+
+<script src="{{ static_url('js/codemirror/lib/codemirror.js') }}"></script>
+<script src="{{ static_url('js/codemirror/addon/mode/simple.js') }}"></script>
+<script src="{{ static_url('js/codemirror/addon/hint/show-hint.js') }}"></script>
+<script src="{{ static_url('js/codemirror/mode/rvt/rvt.js') }}"></script>
+
+<script>
+  function formatParams( params ){
+    return "?" + Object
+          .keys(params)
+          .map(function(key){
+            return key+"="+encodeURIComponent(params[key])
+          })
+          .join("&")
+  }
+  function rvt_blocks(cm, option) {
+    const blocks = [
+        "Verify",
+        "Move",
+        "Test",
+        "VerifyReject",
+        "VerifyAccept"
+    ]
+    return new Promise(function(resolve, reject) {
+        var cursor = cm.getCursor(), line = cm.getLine(cursor.line)
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/autocomplete' + formatParams({line: line, ch: cursor.ch}));
+        xhr.onload = function () {
+          if (this.status >= 200 && this.status < 300) {
+            result = JSON.parse(xhr.response)
+            if (result.list.length == 0) {
+                return resolve(null)
+            }
+
+            resolve({
+                list: result.list,
+                from: CodeMirror.Pos(cursor.line, result.from),
+                to: CodeMirror.Pos(cursor.line, result.to)
+            });
+
+          } else {
+            resolve(null)
+          }
+        };
+        xhr.onerror = function () {
+            resolve(null)
+        };
+        xhr.send();
+    })
+  }
+</script>
+
 <script>
     HTMLElement.prototype.onEvent = function (eventType, callBack, useCapture) {
         this.addEventListener(eventType, callBack, useCapture);
@@ -443,10 +496,98 @@
         const template = document.getElementById("step-row-template");
         const clone = template.content.firstElementChild.cloneNode(true);
         container.appendChild(clone);
+        add_codemirror(clone.getElementsByTagName('textarea')[0])
         renumber_testcases()
     };
 
     renumber_testcases();
+    var ExcludedIntelliSenseTriggerKeys =
+{
+    "8": "backspace",
+    "9": "tab",
+    "13": "enter",
+    "16": "shift",
+    "17": "ctrl",
+    "18": "alt",
+    "19": "pause",
+    "20": "capslock",
+    "27": "escape",
+    "33": "pageup",
+    "34": "pagedown",
+    "35": "end",
+    "36": "home",
+    "37": "left",
+    "38": "up",
+    "39": "right",
+    "40": "down",
+    "45": "insert",
+    "46": "delete",
+    "91": "left window key",
+    "92": "right window key",
+    "93": "select",
+    "107": "add",
+    "109": "subtract",
+    "110": "decimal point",
+    "111": "divide",
+    "112": "f1",
+    "113": "f2",
+    "114": "f3",
+    "115": "f4",
+    "116": "f5",
+    "117": "f6",
+    "118": "f7",
+    "119": "f8",
+    "120": "f9",
+    "121": "f10",
+    "122": "f11",
+    "123": "f12",
+    "144": "numlock",
+    "145": "scrolllock",
+    "186": "semicolon",
+    "187": "equalsign",
+    "188": "comma",
+    "189": "dash",
+    "190": "period",
+    "191": "slash",
+    "192": "graveaccent",
+    "220": "backslash",
+    "222": "quote"
+}
+
+function add_codemirror(textarea)
+{
+    const codemirror_editor = CodeMirror.fromTextArea(textarea, {
+        mode: 'rvt',
+        indentWithTabs: true,
+        viewportMargin: Infinity,
+        extraKeys: {
+            Tab: function(cm) {
+                var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                cm.replaceSelection(spaces);
+            },
+            //"Ctrl-Space": "autocomplete"
+        },
+        hintOptions: {hint: rvt_blocks},
+    });
+
+    codemirror_editor.on("keyup", function(editor, event)
+    {
+        if (!editor.state.completionActive &&
+            !ExcludedIntelliSenseTriggerKeys[(event.keyCode || event.which).toString()])
+        {
+            CodeMirror.commands.autocomplete(editor, null, { completeSingle: false });
+        }
+    });
+}
+    document.addEventListener('DOMContentLoaded', function(event) {
+        // Attach code mirror
+        const container = document.getElementById("step-container");
+        for(let i=0; i < container.childElementCount; i++) {
+            const textarea = container.children[i].getElementsByTagName('textarea')[0]
+            add_codemirror(textarea);
+        }
+    })
+
 
 </script>
 

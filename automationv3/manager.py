@@ -33,7 +33,7 @@ import yaml
 from yaml import safe_load, dump, Dumper
 import os
 
-from .framework import TestCase
+from .framework import BlockResult, TestCase, default_registry, building_block
 
 
 class TestCaseRepository:
@@ -159,6 +159,33 @@ class NewTestCaseHandler(BaseHandler):
             return self.render(f'404.html?{self.url_escape(str(e))}')
 
 
+class AutocompleteHandler(BaseHandler):
+    def set_default_headers(self):
+        self.set_header("Content-Type", 'application/json')
+
+    def get(self):
+        line = self.get_argument('line', '')
+        ch = int(self.get_argument('ch', 0))
+
+        block_names = default_registry.keys()
+
+        leading_spaces = len(line) - len(line.lstrip())
+        block = line.split(' ', 1)[0][leading_spaces:]
+
+        if ch <= len(block):
+            # block auto complete or argument
+            completions = [
+                name for name in block_names if name.startswith(block)]
+            self.write(json.dumps({
+                'list': completions,
+                'from': leading_spaces,
+                'to': leading_spaces + len(block)
+            }))
+        else:
+            # argument autocomplete
+            self.write(json.dumps({'list': []}))
+
+
 class Application(tornado.web.Application):
     is_closing = False
 
@@ -169,6 +196,30 @@ class Application(tornado.web.Application):
         if self.is_closing:
             # clean up here
             tornado.ioloop.IOLoop.instance().stop()
+
+# A few building blocks for autocomplete testing. Can be removed at some point
+
+
+@building_block
+def VerifyAccept():
+    return BlockResult(result=True)
+
+
+@building_block
+def VerifyReturn():
+    return BlockResult(result=True)
+
+
+@building_block
+def VerifyTimeout():
+    return BlockResult(result=True)
+
+
+@building_block
+def Test():
+    return BlockResult(result=True)
+
+# End test building blocks
 
 
 def main():
@@ -191,7 +242,8 @@ def main():
         (r'/', HomeHandler),
         (r'/testcases/new', NewTestCaseHandler),
         (r'/testcases', TestCasesHandler),
-        (r'/testcase/(.*)', TestCaseHandler)
+        (r'/testcase/(.*)', TestCaseHandler),
+        (r'/api/autocomplete', AutocompleteHandler)
     ], **settings)
 
     # See https://github.com/tornadoweb/tornado/issues/2804
