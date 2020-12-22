@@ -318,10 +318,19 @@
         "VerifyAccept"
     ]
     return new Promise(function(resolve, reject) {
-        var cursor = cm.getCursor(), line = cm.getLine(cursor.line)
+        var cursor = cm.getCursor(),
+            text = cm.getValue(),
+            line = cursor.line + 1,
+            col = cursor.ch - 1 
+            
+            if (col < 0)
+                col = 0
+
+        // Add parens
+        text = "(\n" + text + "\n)"
 
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/autocomplete' + formatParams({line: line, ch: cursor.ch}));
+        xhr.open('GET', '/api/autocomplete' + formatParams({text, line, col}));
         xhr.onload = function () {
           if (this.status >= 200 && this.status < 300) {
             result = JSON.parse(xhr.response)
@@ -331,8 +340,8 @@
 
             resolve({
                 list: result.list,
-                from: CodeMirror.Pos(cursor.line, result.from),
-                to: CodeMirror.Pos(cursor.line, result.to)
+                from: CodeMirror.Pos(result.from[0]-1, result.from[1]),
+                to: CodeMirror.Pos(result.to[0]-1, result.to[1]+1)
             });
 
           } else {

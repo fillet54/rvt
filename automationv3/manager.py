@@ -34,6 +34,7 @@ from yaml import safe_load, dump, Dumper
 import os
 
 from .framework import BlockResult, TestCase, default_registry, building_block
+from .rvt_reader import LineInfo, ListNode, IncompleteListNode, SymbolNode, read_token, find_token, PushBackCharStream
 
 
 class TestCaseRepository:
@@ -164,22 +165,52 @@ class AutocompleteHandler(BaseHandler):
         self.set_header("Content-Type", 'application/json')
 
     def get(self):
-        line = self.get_argument('line', '')
-        ch = int(self.get_argument('ch', 0))
+        text = self.get_argument('text', '')
+        line = int(self.get_argument('line', 0))
+        col = int(self.get_argument('col', 0))
 
+        tokens, errors = read_token(PushBackCharStream(text))
         block_names = default_registry.keys()
 
-        leading_spaces = len(line) - len(line.lstrip())
-        block = line.split(' ', 1)[0][leading_spaces:]
+        completions = []
+        if len(tokens) == 0:
+            completions += block_names
+            from_loc = to_loc = LineInfo(0, 0)
+        else:
+            target = find_token(tokens, line, col, level=1)
 
-        if ch <= len(block):
-            # block auto complete or argument
-            completions = [
-                name for name in block_names if name.startswith(block)]
+            if target is not None and isinstance(tokens[0], SymbolNode):
+                from_loc = target.info.start
+                to_loc = target.info.end
+
+                # Block name autocomplete
+                if target == tokens[0]:
+                    completions += [
+                        name for name in block_names if name.startswith(target)]
+                else:
+                    # need to resolve block determine block token and then
+                    # ask token to autocomplete
+                    partial_args = []
+                    for token in tokens:
+                        partial_args.append(token)
+                        if token == target:
+                            break
+                    # TODO: Finish this
+                    #block_name = partial_args[0]
+                    #args = partial_args[1:]
+                    # blocks = find_blocks_partial(block_name, args)
+                    # for block in blocks:
+                    #    completions += block.tokens[len(args)-1].autocomplete(args[-1])
+            else:
+                # Autocomplete cannot be completed leading token is not a symbol
+                from_loc = to_loc = LineInfo(line, col)
+                pass
+
+        if len(completions) > 0:
             self.write(json.dumps({
                 'list': completions,
-                'from': leading_spaces,
-                'to': leading_spaces + len(block)
+                'from': from_loc,
+                'to': to_loc
             }))
         else:
             # argument autocomplete
