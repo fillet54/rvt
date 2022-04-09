@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Test Cases{% end %}
+{% block title %}Test Cases{% endblock %}
 
 {% block navbuttons %}
 <a href="/testcases/new"
@@ -12,12 +12,12 @@
     </svg>
     Test Case
 </a>
-{% end %}
+{% endblock %}
 
 {% block content %}
 <ul>
     {% for tc in test_cases %}
     <li><a href="/testcase/{{'{:016X}'.format(tc.id)}}">{{ '0x{:016X}'.format(tc.id) }}</a></li>
-    {% end %}
+    {% endfor %}
 </ul>
-{% end %}
+{% endblock %}

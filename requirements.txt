@@ -3,3 +3,4 @@ black
 pylint
 tornado
 pyyaml
+jinja2

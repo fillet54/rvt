@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>{% block title %}Default title{% end %}</title>
+    <title>{% block title %}Default title{% endblock %}</title>
     <link rel="stylesheet" href="{{ static_url('css/codemirror.css') }}">
     <link rel="stylesheet" href="{{ static_url('css/show-hint.css') }}">
     <link rel="stylesheet" href="{{ static_url('css/tailwind.css') }}" type="text/css">
@@ -224,7 +224,7 @@
                         </button>
 
                         {% block navbuttons %}
-                        {% end %}
+                        {% endblock %}
 
                     </div>
                 </div>
@@ -232,21 +232,18 @@
 
             <main class="flex-1 relative overflow-y-auto focus:outline-none" tabindex="0">
                 <div class="py-6">
-                    {% try %}
                     {% if heading_text %}
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
                         <h1 class="text-2xl font-semibold text-gray-900">
                             {{ heading_text }}
                         </h1>
                     </div>
-                    {% end %}
-                    {% except %}
-                    {% end %}
+                    {% endif %}
 
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
 
                         {% block content %}
-                        {% end %}
+                        {% endblock %}
 
 
                     </div>

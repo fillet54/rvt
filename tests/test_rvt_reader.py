@@ -1,4 +1,4 @@
-from automationv3.rvt_reader import PushBackCharStream
+from automationv3.rvt_reader import PushBackCharStream, read, SymbolNode
 
 
 def test_PushBackCharStream_as_iterator():
@@ -58,3 +58,22 @@ def test_PushBackCharStream_line_pushback():
     assert char3 == '2'
     assert char3.line == 1
     assert char3.col == 1
+
+
+def test_simple_symbol():
+    symbol = "one_1_simple_symbol"
+
+    token, errors = read(symbol)
+
+    assert len(errors) == 0
+    assert isinstance(token, SymbolNode)
+
+
+def test_two_symbols_is_error():
+    symbol = "one_1_simple_symbol, another_symbol"
+
+    token, errors = read(symbol)
+
+    assert len(errors) == 1
+    assert errors[0] == "NOT EMPTY"
+    assert isinstance(token, SymbolNode)

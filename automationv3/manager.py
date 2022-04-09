@@ -28,6 +28,7 @@ import tornado.web
 import tornado.websocket
 import tornado.options
 import tornado.httpserver
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 import yaml
 from yaml import safe_load, dump, Dumper
@@ -35,6 +36,11 @@ import os
 
 from .framework import BlockResult, TestCase, default_registry, building_block
 from .rvt_reader import LineInfo, ListNode, IncompleteListNode, SymbolNode, read_token, find_token, PushBackCharStream
+
+
+class Icon(tornado.web.UIModule):
+    def render(self, name: str, classnames='') -> str:
+        return self.render_string(f'icons/{name.lower()}.svg', classnames=classnames)
 
 
 class TestCaseRepository:
@@ -92,27 +98,71 @@ class TestCaseRepository:
             testcase.dump(f)
 
 
-class BaseHandler(tornado.web.RequestHandler):
+class TemplateRendering:
+    """
+    A simple class to hold methods for rendering templates.
+    """
+
+    def render_template(self, template_name, **kwargs):
+        template_dirs = []
+        if self.settings.get('template_path', ''):
+            template_dirs.append(
+                self.settings["template_path"]
+            )
+
+        env = Environment(loader=FileSystemLoader(template_dirs))
+
+        try:
+            template = env.get_template(template_name)
+        except TemplateNotFound:
+            raise TemplateNotFound(template_name)
+        content = template.render(kwargs)
+        return content
+
+
+class BaseHandler(tornado.web.RequestHandler, TemplateRendering):
 
     @property
     def repo(self) -> TestCaseRepository:
         return self.settings['testcase_repo']
 
+    """
+    RequestHandler already has a `render()` method. I'm writing another
+    method `render2()` and keeping the API almost same.
+    """
+
+    def render2(self, template_name, **kwargs):
+        """
+        This is for making some extra context variables available to
+        the template
+        """
+        kwargs.update({
+            'settings': self.settings,
+            'STATIC_URL': self.settings.get('static_url_prefix', '/static/'),
+            'static_url': self.static_url,
+            'request': self.request,
+            'xsrf_token': self.xsrf_token,
+            'xsrf_form_html': self.xsrf_form_html,
+            'json': json
+        })
+        content = self.render_template(template_name, **kwargs)
+        self.write(content)
+
 
 class NotFoundHandler(BaseHandler):
     def get(self):
-        return self.render('404.html')
+        return self.render2('404.html')
 
 
 class HomeHandler(BaseHandler):
     def get(self):
-        return self.render('home.html', heading_text='Dashboard')
+        return self.render2('home.html', heading_text='Dashboard')
 
 
 class TestCaseHandler(BaseHandler):
     def get(self, id):
         testcase = self.repo.get(id=int(id, 16))
-        return self.render('testcase.html', testcase=testcase)
+        return self.render2('testcase.html', testcase=testcase)
 
     def post(self, id):
         cur_tc = self.repo.get(id=int(id, 16))
@@ -137,7 +187,7 @@ class TestCasesHandler(BaseHandler):
         for t in test_cases:
             print(t.asdict())
 
-        return self.render('testcases.html', test_cases=test_cases, heading_text='Test Cases')
+        return self.render2('testcases.html', test_cases=test_cases, heading_text='Test Cases')
 
 
 class NewTestCaseHandler(BaseHandler):
@@ -250,6 +300,10 @@ def VerifyTimeout():
 def Test():
     return BlockResult(result=True)
 
+
+@building_block
+def Wait():
+    return BlockResult(result=True)
 # End test building blocks
 
 
@@ -266,7 +320,8 @@ def main():
         'gzip': True,
         'debug': True,
         'default_handler_class': NotFoundHandler,
-        'testcase_repo': TestCaseRepository(test_case_root, get_client_unique_id_generator())
+        'testcase_repo': TestCaseRepository(test_case_root, get_client_unique_id_generator()),
+        'ui_modules': {'Icon': Icon}
     }
 
     application = Application([
@@ -285,9 +340,12 @@ def main():
     # See: https://stackoverflow.com/questions/3442607/mime-types-in-the-windows-registry/3452261#3452261
     mimetypes.add_type('application/javascript', '.js')
 
+    port = 8087
+    print(f"Starting Automation-V3 Framework on port {port}")
+
     tornado.options.parse_command_line()
     signal.signal(signal.SIGINT, application.signal_handler)
-    application.listen(8888)
+    application.listen(port)
     tornado.ioloop.PeriodicCallback(application.try_exit, 100).start()
     tornado.ioloop.IOLoop.instance().start()
 

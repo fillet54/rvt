@@ -37,6 +37,8 @@ class PushBackCharStream:
 
         self.eof_info = LineInfo(0, 0)
 
+        self.__reached_end = False
+
     def __iter__(self):
         return self
 
@@ -44,7 +46,12 @@ class PushBackCharStream:
         if self.pushed_back:
             char = self.pushed_back.pop()
         else:
-            char = next(self.iterator)
+            try:
+                char = next(self.iterator)
+            except StopIteration:
+                self.__reached_end = True
+                raise
+
             self.eof_info = LineInfo(self.line, self.col)
         char = Character(char, self.line, self.col)
 
@@ -71,6 +78,10 @@ class PushBackCharStream:
             self.col = self.line_history[self.line]
         else:
             self.col -= 1
+
+    @property
+    def empty(self):
+        return len(self.pushed_back) == 0 and self.__reached_end
 
 
 class EOF:
@@ -365,6 +376,15 @@ def find_token(tree, line, col, level=-1):
 
         # Trailing whitespace goes to previous token
         return None
+
+
+def read(s):
+    stream = PushBackCharStream(s)
+    token, errors = read_token(stream)
+
+    if not stream.empty:
+        errors.append("NOT EMPTY")
+    return token, errors
 
 
 if __name__ == '__main__':
