@@ -15,6 +15,7 @@
 #       - By tag (a tag could be a subsystem or it can be arbitrary)
 #       - Sorted by timestamp
 #       - etc...
+from collections import namedtuple
 from automationv3.util import get_client_unique_id_generator
 import sys
 import asyncio
@@ -29,6 +30,7 @@ import tornado.websocket
 import tornado.options
 import tornado.httpserver
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+from heroicons.jinja import heroicon_outline, heroicon_solid
 
 import yaml
 from yaml import safe_load, dump, Dumper
@@ -112,6 +114,14 @@ class TemplateRendering:
 
         env = Environment(loader=FileSystemLoader(template_dirs))
 
+        # Add heroicons
+        env.globals.update(
+            {
+                "heroicon_outline": heroicon_outline,
+                "heroicon_solid": heroicon_solid,
+            }
+        )
+
         try:
             template = env.get_template(template_name)
         except TemplateNotFound:
@@ -119,6 +129,7 @@ class TemplateRendering:
         content = template.render(kwargs)
         return content
 
+NavItem = namedtuple('NavItem', ['display', 'path', 'icon'])
 
 class BaseHandler(tornado.web.RequestHandler, TemplateRendering):
 
@@ -143,7 +154,8 @@ class BaseHandler(tornado.web.RequestHandler, TemplateRendering):
             'request': self.request,
             'xsrf_token': self.xsrf_token,
             'xsrf_form_html': self.xsrf_form_html,
-            'json': json
+            'json': json,
+            'navitems': self.settings.get('navitems', [])
         })
         content = self.render_template(template_name, **kwargs)
         self.write(content)
@@ -321,7 +333,14 @@ def main():
         'debug': True,
         'default_handler_class': NotFoundHandler,
         'testcase_repo': TestCaseRepository(test_case_root, get_client_unique_id_generator()),
-        'ui_modules': {'Icon': Icon}
+        'ui_modules': {'Icon': Icon},
+        'navitems': [
+            NavItem('Dashboard', '/', 'home'),
+            NavItem('Test Cases', '/testcases', 'collection'),
+            NavItem('Snippets', '/snippets', 'document-text'),
+            NavItem('Requirements', '/requirements', 'clipboard-list'),
+            NavItem('Reports', '/reports', 'chart-bar')
+        ]
     }
 
     application = Application([
