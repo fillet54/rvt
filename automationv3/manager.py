@@ -16,12 +16,10 @@
 #       - Sorted by timestamp
 #       - etc...
 from collections import namedtuple
-from automationv3.util import get_client_unique_id_generator
 import sys
 import asyncio
 import os
 import signal
-import time
 import json
 import mimetypes
 
@@ -36,6 +34,7 @@ import yaml
 from yaml import safe_load, dump, Dumper
 import os
 
+from automationv3.util import get_client_unique_id_generator
 from .framework import BlockResult, TestCase, default_registry, building_block
 from .rvt_reader import LineInfo, ListNode, IncompleteListNode, SymbolNode, read_token, find_token, PushBackCharStream
 
@@ -131,16 +130,16 @@ class TemplateRendering:
 
 NavItem = namedtuple('NavItem', ['display', 'path', 'icon'])
 
+# pylint: disable=W0223
 class BaseHandler(tornado.web.RequestHandler, TemplateRendering):
-
-    @property
-    def repo(self) -> TestCaseRepository:
-        return self.settings['testcase_repo']
-
     """
     RequestHandler already has a `render()` method. I'm writing another
     method `render2()` and keeping the API almost same.
     """
+
+    @property
+    def repo(self) -> TestCaseRepository:
+        return self.settings['testcase_repo']
 
     def render2(self, template_name, **kwargs):
         """
