@@ -17,12 +17,18 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
-    install_requires=[],
+    install_requires=[
+        'edn-format',
+        'tornado',
+        'Jinja2',
+        'click',
+        'heroicons[jinja]'
+    ],
     tests_requires=[ 'pytest' ],
     tests_suite='pytest',
     python_requires='>=3.8',
     include_package_data=True,
     entry_points = {
-        'console_scripts': ['automation-v3=automationv3.manager:main'],
+        'console_scripts': ['automation-v3=automationv3.ui.app:cli'],
     }
 )

@@ -5,5 +5,5 @@ package-lock.json
 tailwind.config.js
 __pycache__/
 .vscode
-
+.archive/
 .ipynb_checkpoints/

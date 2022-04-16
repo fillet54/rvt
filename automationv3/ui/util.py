@@ -66,3 +66,4 @@ def get_client_unique_id_generator():
     hash = hashlib.sha256(username.encode())
     client_id = struct.unpack('I', hash.digest()[:4])[0] & max_worker_id
     return id_generator(client_id)
+

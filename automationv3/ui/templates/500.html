@@ -1,0 +1,28 @@
+<html>
+
+<head>
+    <title>{% block title %}Server Error{% endblock %}</title>
+    <link rel="stylesheet" href="{{ static_url('css/tailwind.css') }}" type="text/css">
+</head>
+
+<body>
+
+    <div class="h-screen w-screen flex justify-center content-center">
+        <div>
+            <div class="flex justify-center content-center">
+                {% include 'icons/error-exclamation.svg' %}
+            </div>
+            <h1 class="text-4xl font-bold text-gray-700">Opps!! Something Went Wrong</h1>
+            <p>
+                {{ error_msg }}
+            </p>
+            <a href="/"
+                class="my-5 w-40 bg-gray-300 text-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                {{ heroicon_outline('arrow-left', size=24, class="mr-3, h-6, w-6 text-gray-700") }}
+                Go Back Home
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

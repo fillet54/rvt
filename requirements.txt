@@ -1,29 +1,11 @@
-astroid==2.9.3
-atomicwrites==1.4.0
-attrs==21.4.0
--e git+git@github.com:fillet54/rvt.git@9973ed005b7f42f879b5debfa453b72392f21e31#egg=automation_v3
-black==22.1.0
-click==8.0.3
+-e git+ssh://git@github.com/fillet54/rvt.git@26332e0ac60fe9674d236fd63217894133111761#egg=automation_v3
+click==8.1.2
 colorama==0.4.4
+edn-format==0.7.5
 heroicons==1.6.0
-iniconfig==1.1.1
-isort==5.10.1
-Jinja2==3.0.3
-lazy-object-proxy==1.7.1
-MarkupSafe==2.0.1
-mccabe==0.6.1
-mypy-extensions==0.4.3
-packaging==21.3
-pathspec==0.9.0
-platformdirs==2.4.1
-pluggy==1.0.0
-py==1.11.0
-pylint==2.12.2
-pyparsing==3.0.7
-pytest==7.0.0
-PyYAML==6.0
-toml==0.10.2
-tomli==2.0.0
+Jinja2==3.1.1
+MarkupSafe==2.1.1
+ply==3.11
+pyRFC3339==1.1
+pytz==2022.1
 tornado==6.1
-typing-extensions==4.0.1
-wrapt==1.13.3

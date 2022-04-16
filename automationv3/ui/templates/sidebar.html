@@ -1,0 +1,19 @@
+<div class="flex flex-col flex-grow md:pt-5 pb-4 overflow-y-auto">
+    <div class="items-center flex flex-shrink-0 px-4">
+        <img class="h-10 w-auto" src="{{ static_url('img/automation-logo.png') }}" alt="Automation-V3">
+    </div>
+
+    <div class="mt-5 flex-1 h-0 overflow-y-auto">
+        <nav class="px-2 space-y-1">
+            {% for item in navitems %}
+                <a href="{{ item.path }}"
+                    class="{{ 'bg-blue-800 text-white' if nav_path == item.path else 'text-blue-100 hover:bg-blue-600' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                    {{ heroicon_outline(item.icon, size=24, class="mr-3 h-6 w-6 text-blue-300") }}
+                    {{ item.display }}
+                </a>
+            {% endfor %} 
+        </nav>
+    </div>
+
+    </div>
+</div>
